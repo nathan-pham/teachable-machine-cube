@@ -13,6 +13,9 @@ export default class Scene {
 
     private cube!: THREE.Mesh;
 
+    public targetScale: number = 1;
+    public targetRotation: number[] = [0, 0, 0];
+
     constructor({ container }: SceneProps) {
         if (container) {
             this.container = container;
@@ -54,13 +57,25 @@ export default class Scene {
             color: 0x00ff00,
             wireframe: true,
         });
-        const cube = new THREE.Mesh(geometry, material);
 
-        return cube;
+        return new THREE.Mesh(geometry, material);
     }
 
     core() {
         this.renderer.render(this.scene, this.camera);
+
+        this.cube.scale.set(
+            THREE.MathUtils.lerp(this.cube.scale.x, this.targetScale, 0.1),
+            THREE.MathUtils.lerp(this.cube.scale.y, this.targetScale, 0.1),
+            THREE.MathUtils.lerp(this.cube.scale.z, this.targetScale, 0.1)
+        );
+
+        // prettier-ignore
+        this.cube.rotation.set(
+            THREE.MathUtils.lerp(this.cube.rotation.x, this.targetRotation[0], 0.1),
+            THREE.MathUtils.lerp(this.cube.rotation.y, this.targetRotation[1], 0.1),
+            THREE.MathUtils.lerp(this.cube.rotation.z, this.targetRotation[2], 0.1)
+        );
 
         requestAnimationFrame(this.core.bind(this));
     }

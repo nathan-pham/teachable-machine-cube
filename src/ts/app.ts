@@ -4,28 +4,42 @@ import "@/css/index.css";
 import TeachableMachine from "./TeachableMachine";
 import Scene from "./Scene";
 
+// create Three.js Scene
 const appContainer = document.getElementById("app")! as HTMLDivElement;
+const scene = new Scene({ container: appContainer });
+scene.core();
 
-const scene = new Scene({
-    container: appContainer,
-});
+interface Prediction {
+    className: string;
+    probability: number;
+}
 
+// initialize Teachable Machine
 const machine = new TeachableMachine({
     url: "/model",
-    container: appContainer,
     onLoop: async (teachableMachine) => {
-        const prediction = await teachableMachine.predict();
+        const prediction = (await teachableMachine.predict()).reduce(
+            (acc: Prediction, curr: Prediction): Prediction =>
+                acc.probability > curr.probability ? acc : curr
+        );
 
-        // this.cube.rotation.x += 0.01;
+        switch (prediction.className) {
+            case "Left Spin":
+            case "Right Spin":
+                scene.targetRotation[1] += 0.1;
+                break;
 
-        // 0: {className: 'Center', probability: 0.000301551102893427}
-        // 1: {className: 'Expand', probability: 0.000038921974919503555}
-        // 2: {className: 'Right Spin', probability: 0.0000704218473401852}
-        // 3: {className: 'Left Spin', probability: 0.000039932790969032794}
-        // 4: {className: 'Nothing', p
+            case "Expand":
+                scene.targetScale = 5;
+                break;
+
+            case "Center":
+                scene.targetScale = 1;
+                scene.targetRotation = [0, 0, 0];
+                break;
+        }
     },
 });
 
 await machine.load();
 machine.core();
-scene.core();
