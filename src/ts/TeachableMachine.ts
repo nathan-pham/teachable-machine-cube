@@ -5,27 +5,30 @@ const app = document.getElementById("app")!;
 
 interface TeachableMachineProps {
     url: string;
-    container: HTMLDivElement;
-    onPredict?: (machine: TeachableMachine) => Promise<void>;
+    container?: HTMLDivElement;
+    onLoop?: (machine: TeachableMachine) => Promise<void>;
 }
 
 export default class TeachableMachine {
     private url: string;
-    private container: HTMLDivElement;
+    private container: HTMLDivElement | undefined;
 
     private model!: tmImage.CustomMobileNet;
     private webcam!: tmImage.Webcam;
 
-    constructor({ url, container, onPredict }: TeachableMachineProps) {
+    constructor({ url, container, onLoop }: TeachableMachineProps) {
         this.url = url;
-        this.container = container;
 
-        if (onPredict) {
-            this.onPredict = onPredict;
+        if (this.container) {
+            this.container = container;
+        }
+
+        if (onLoop) {
+            this.onLoop = onLoop;
         }
     }
 
-    async onPredict(_: TeachableMachine) {}
+    async onLoop(_: TeachableMachine) {}
 
     async predict() {
         return this.model.predict(this.webcam.canvas);
@@ -33,7 +36,7 @@ export default class TeachableMachine {
 
     async core() {
         this.webcam.update();
-        await this.onPredict(this);
+        await this.onLoop(this);
         window.requestAnimationFrame(this.core.bind(this));
     }
 
@@ -57,6 +60,6 @@ export default class TeachableMachine {
         this.model = await this.loadModel();
         this.webcam = await this.loadWebcam();
 
-        this.container.appendChild(this.webcam.canvas);
+        this.container && this.container.appendChild(this.webcam.canvas);
     }
 }
